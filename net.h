@@ -8,7 +8,6 @@
 #include <deque>
 #include <boost/array.hpp>
 #include <boost/foreach.hpp>
-#include <openssl/rand.h>
 
 #ifndef WIN32
 #include <arpa/inet.h>
@@ -21,6 +20,9 @@
 #include "addrman.h"
 #include "hash.h"
 #include "bloom.h"
+
+#include <openssl/rand.h>
+
 
 class CNode;
 class CBlockIndex;
@@ -98,7 +100,7 @@ public:
     int64 nTimeConnected;
     std::string addrName;
     int nVersion;
-    std::string strSubVer;
+    std::string cleanSubVer;
     bool fInbound;
     int nStartingHeight;
     int nMisbehavior;
@@ -177,7 +179,11 @@ public:
     std::string addrName;
     CService addrLocal;
     int nVersion;
-    std::string strSubVer;
+    // strSubVer is whatever byte array we read from the wire. However, this field is intended
+    // to be printed out, displayed to humans in various forms and so on. So we sanitize it and
+    // store the sanitized version in cleanSubVer. The original should be used when dealing with
+    // the network or wire types and the cleaned string used when displayed or logged.
+    std::string strSubVer, cleanSubVer;
     bool fOneShot;
     bool fClient;
     bool fInbound;
@@ -287,7 +293,7 @@ public:
     unsigned int GetTotalRecvSize()
     {
         unsigned int total = 0;
-        BOOST_FOREACH(const CNetMessage &msg, vRecvMsg) 
+        BOOST_FOREACH(const CNetMessage &msg, vRecvMsg)
             total += msg.vRecv.size() + 24;
         return total;
     }
