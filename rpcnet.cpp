@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2014 Bitcoin Developers
+// Copyright (c) 2009-2012 Bitcoin Developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -53,7 +53,6 @@ Value getpeerinfo(const Array& params, bool fHelp)
         obj.push_back(Pair("lastrecv", (boost::int64_t)stats.nLastRecv));
         obj.push_back(Pair("bytessent", (boost::int64_t)stats.nSendBytes));
         obj.push_back(Pair("bytesrecv", (boost::int64_t)stats.nRecvBytes));
-        obj.push_back(Pair("blocksrequested", (boost::int64_t)stats.nBlocksRequested));
         obj.push_back(Pair("conntime", (boost::int64_t)stats.nTimeConnected));
         obj.push_back(Pair("version", stats.nVersion));
         // Use the sanitized form of subver here, to avoid tricksy remote peers from
@@ -147,17 +146,15 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
             throw JSONRPCError(-24, "Error: Node has not been added.");
     }
 
-    Array ret;
     if (!fDns)
     {
+        Object ret;
         BOOST_FOREACH(string& strAddNode, laddedNodes)
-        {
-            Object obj;
-            obj.push_back(Pair("addednode", strAddNode));
-            ret.push_back(obj);
-        }
+            ret.push_back(Pair("addednode", strAddNode));
         return ret;
     }
+
+    Array ret;
 
     list<pair<string, vector<CService> > > laddedAddreses(0);
     BOOST_FOREACH(string& strAddNode, laddedNodes)

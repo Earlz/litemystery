@@ -348,10 +348,8 @@ public:
 
     CScript& operator<<(const CPubKey& key)
     {
-        assert(key.size() < OP_PUSHDATA1);
-        insert(end(), (unsigned char)key.size());
-        insert(end(), key.begin(), key.end());
-        return *this;
+        std::vector<unsigned char> vchKey = key.Raw();
+        return (*this) << vchKey;
     }
 
     CScript& operator<<(const CBigNum& b)
@@ -533,7 +531,7 @@ public:
 
     bool IsPayToScriptHash() const;
 
-    // Called by CTransaction::IsStandard and P2SH VerifyScript (which makes it consensus-critical).
+    // Called by CTransaction::IsStandard
     bool IsPushOnly() const
     {
         const_iterator pc = begin();
@@ -548,11 +546,9 @@ public:
         return true;
     }
 
-    // Called by IsStandardTx.
-    bool HasCanonicalPushes() const;
 
     void SetDestination(const CTxDestination& address);
-    void SetMultisig(int nRequired, const std::vector<CPubKey>& keys);
+    void SetMultisig(int nRequired, const std::vector<CKey>& keys);
 
 
     void PrintHex() const
@@ -623,7 +619,7 @@ protected:
     // form).
     bool IsToKeyID(CKeyID &hash) const;
     bool IsToScriptID(CScriptID &hash) const;
-    bool IsToPubKey(CPubKey &pubkey) const;
+    bool IsToPubKey(std::vector<unsigned char> &pubkey) const;
 
     bool Compress(std::vector<unsigned char> &out) const;
     unsigned int GetSpecialSize(unsigned int nSize) const;
@@ -670,7 +666,6 @@ public:
 bool IsCanonicalPubKey(const std::vector<unsigned char> &vchPubKey);
 bool IsCanonicalSignature(const std::vector<unsigned char> &vchSig);
 
-uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);
 int ScriptSigArgsExpected(txnouttype t, const std::vector<std::vector<unsigned char> >& vSolutions);
