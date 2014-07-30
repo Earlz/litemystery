@@ -1,6 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin Developers
-// Copyright (c) 2013-2014 Dogecoin Developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,9 +8,9 @@
 // Why base-58 instead of standard base-64 encoding?
 // - Don't want 0OIl characters that look the same in some fonts and
 //      could be used to create visually identical looking account numbers.
-// - A string with non-luckynumeric characters is not as easily accepted as an account number.
+// - A string with non-alphanumeric characters is not as easily accepted as an account number.
 // - E-mail usually won't line-break if there's no punctuation to break at.
-// - Double-clicking selects the whole number as one word if it's all luckynumeric.
+// - Double-clicking selects the whole number as one word if it's all alphanumeric.
 //
 #ifndef BITCOIN_BASE58_H
 #define BITCOIN_BASE58_H
@@ -273,9 +272,9 @@ class CBitcoinAddress : public CBase58Data
 public:
     enum
     {
-        PUBKEY_ADDRESS = 30, // DogeCoin addresses start with D
-        SCRIPT_ADDRESS = 22,
-        PUBKEY_ADDRESS_TEST = 113,
+        PUBKEY_ADDRESS = 0,
+        SCRIPT_ADDRESS = 5,
+        PUBKEY_ADDRESS_TEST = 111,
         SCRIPT_ADDRESS_TEST = 196,
     };
 
@@ -399,25 +398,21 @@ bool inline CBitcoinAddressVisitor::operator()(const CNoDestination &id) const {
 class CBitcoinSecret : public CBase58Data
 {
 public:
-    enum
+    void SetSecret(const CSecret& vchSecret, bool fCompressed)
     {
-        PRIVKEY_ADDRESS = CBitcoinAddress::PUBKEY_ADDRESS + 128,
-        PRIVKEY_ADDRESS_TEST = CBitcoinAddress::PUBKEY_ADDRESS_TEST + 128,
-    };
-
-    void SetKey(const CKey& vchSecret)
-    {
-        assert(vchSecret.IsValid());
-        SetData(fTestNet ? PRIVKEY_ADDRESS_TEST : PRIVKEY_ADDRESS, vchSecret.begin(), vchSecret.size());
-        if (vchSecret.IsCompressed())
+        assert(vchSecret.size() == 32);
+        SetData(fTestNet ? 239 : 128, &vchSecret[0], vchSecret.size());
+        if (fCompressed)
             vchData.push_back(1);
     }
 
-    CKey GetKey()
+    CSecret GetSecret(bool &fCompressedOut)
     {
-        CKey ret;
-        ret.Set(&vchData[0], &vchData[32], vchData.size() > 32 && vchData[32] == 1);
-        return ret;
+        CSecret vchSecret;
+        vchSecret.resize(32);
+        memcpy(&vchSecret[0], &vchData[0], 32);
+        fCompressedOut = vchData.size() == 33;
+        return vchSecret;
     }
 
     bool IsValid() const
@@ -425,10 +420,10 @@ public:
         bool fExpectTestNet = false;
         switch(nVersion)
         {
-            case PRIVKEY_ADDRESS:
+            case 128:
                 break;
 
-            case PRIVKEY_ADDRESS_TEST:
+            case 239:
                 fExpectTestNet = true;
                 break;
 
@@ -448,9 +443,9 @@ public:
         return SetString(strSecret.c_str());
     }
 
-    CBitcoinSecret(const CKey& vchSecret)
+    CBitcoinSecret(const CSecret& vchSecret, bool fCompressed)
     {
-        SetKey(vchSecret);
+        SetSecret(vchSecret, fCompressed);
     }
 
     CBitcoinSecret()

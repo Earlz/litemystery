@@ -1,5 +1,4 @@
 # Copyright (c) 2009-2010 Satoshi Nakamoto
-# Copyright (c) 2013-2014 Dogecoin Developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -71,7 +70,6 @@ HEADERS = $(wildcard *.h)
 
 OBJS= \
     leveldb/libleveldb.a \
-    json/json_spirit_value.o \
     obj/alert.o \
     obj/version.o \
     obj/checkpoints.o \
@@ -81,7 +79,6 @@ OBJS= \
     obj/key.o \
     obj/db.o \
     obj/init.o \
-    obj/irc.o \
     obj/keystore.o \
     obj/main.o \
     obj/net.o \
@@ -94,7 +91,6 @@ OBJS= \
     obj/rpcblockchain.o \
     obj/rpcrawtransaction.o \
     obj/script.o \
-    obj/scrypt.o \
     obj/sync.o \
     obj/util.o \
     obj/wallet.o \
@@ -105,16 +101,11 @@ OBJS= \
     obj/leveldb.o \
     obj/txdb.o
 
-ifdef USE_SSE2
-DEFS += -DUSE_SSE2
-OBJS_SSE2= obj/scrypt-sse2.o
-OBJS += $(OBJS_SSE2)
-endif
 
-all: dogecoind.exe
+all: mysterycoind.exe
 
-test check: test_dogecoin.exe FORCE
-	test_dogecoin.exe
+test check: test_mysterycoin.exe FORCE
+	test_mysterycoin.exe
 
 #
 # LevelDB support
@@ -125,13 +116,10 @@ DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
 leveldb/libleveldb.a:
 	cd leveldb && $(MAKE) CC=$(CC) CXX=$(CXX) OPT="$(CFLAGS)" TARGET_OS=NATIVE_WINDOWS libleveldb.a libmemenv.a && cd ..
 
-obj/%-sse2.o: %-sse2.cpp
-	$(CXX) -c $(CFLAGS) -msse2 -mstackrealign -o $@ $<
-
 obj/%.o: %.cpp $(HEADERS)
 	$(CXX) -c $(CFLAGS) -o $@ $<
 
-dogecoind.exe: $(OBJS:obj/%=obj/%)
+mysterycoind.exe: $(OBJS:obj/%=obj/%)
 	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
@@ -139,11 +127,11 @@ TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 obj-test/%.o: test/%.cpp $(HEADERS)
 	$(CXX) -c $(TESTDEFS) $(CFLAGS) -o $@ $<
 
-test_dogecoin.exe: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
+test_mysterycoin.exe: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
 	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ -lboost_unit_test_framework$(BOOST_SUFFIX) $(LIBS)
 
 clean:
-	rm -f dogecoind.exe test_dogecoin.exe
+	rm -f mysterycoind.exe test_mysterycoin.exe
 	rm -f obj/*
 	rm -f obj-test/*
 	cd leveldb && $(MAKE) TARGET_OS=NATIVE_WINDOWS clean && cd ..

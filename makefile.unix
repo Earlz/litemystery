@@ -1,5 +1,4 @@
 # Copyright (c) 2009-2010 Satoshi Nakamoto
-# Copyright (c) 2013-2014 Dogecoin Developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -122,7 +121,6 @@ OBJS= \
     obj/key.o \
     obj/db.o \
     obj/init.o \
-    obj/irc.o \
     obj/keystore.o \
     obj/main.o \
     obj/net.o \
@@ -135,7 +133,6 @@ OBJS= \
     obj/rpcblockchain.o \
     obj/rpcrawtransaction.o \
     obj/script.o \
-    obj/scrypt.o \
     obj/sync.o \
     obj/util.o \
     obj/wallet.o \
@@ -144,20 +141,13 @@ OBJS= \
     obj/bloom.o \
     obj/noui.o \
     obj/leveldb.o \
-    obj/txdb.o \
-    json/json_spirit_value.o
+    obj/txdb.o
 
 
-ifdef USE_SSE2
-DEFS += -DUSE_SSE2
-OBJS_SSE2= obj/scrypt-sse2.o
-OBJS += $(OBJS_SSE2)
-endif
+all: mysterycoind
 
-all: dogecoind
-
-test check: test_dogecoin FORCE
-	./test_dogecoin
+test check: test_mysterycoin FORCE
+	./test_mysterycoin
 
 #
 # LevelDB support
@@ -178,13 +168,6 @@ obj/build.h: FORCE
 version.cpp: obj/build.h
 DEFS += -DHAVE_BUILD_INFO
 
-obj/%-sse2.o: %-sse2.cpp
-	$(CXX) -c $(xCXXFLAGS) -msse2 -MMD -MF $(@:%.o=%.d) -o $@ $<
-	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
-	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
-	  rm -f $(@:%.o=%.d)
-
 obj/%.o: %.cpp
 	$(CXX) -c $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
@@ -192,7 +175,7 @@ obj/%.o: %.cpp
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-dogecoind: $(OBJS:obj/%=obj/%)
+mysterycoind: $(OBJS:obj/%=obj/%)
 	$(LINK) $(xCXXFLAGS) -o $@ $^ $(xLDFLAGS) $(LIBS)
 
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
@@ -204,11 +187,11 @@ obj-test/%.o: test/%.cpp
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-test_dogecoin: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
+test_mysterycoin: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
 	$(LINK) $(xCXXFLAGS) -o $@ $(LIBPATHS) $^ $(TESTLIBS) $(xLDFLAGS) $(LIBS)
 
 clean:
-	-rm -f dogecoind test_dogecoin
+	-rm -f mysterycoind test_mysterycoin
 	-rm -f obj/*.o
 	-rm -f obj-test/*.o
 	-rm -f obj/*.P

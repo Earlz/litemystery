@@ -1,6 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2013-2014 Dogecoin Developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_UTIL_H
@@ -14,6 +13,8 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#else
+typedef int pid_t; /* define for Windows compatibility */
 #endif
 #include <map>
 #include <list>
@@ -36,7 +37,9 @@ typedef unsigned long long  uint64;
 static const int64 COIN = 100000000;
 static const int64 CENT = 1000000;
 
+#ifndef NO_LOOP
 #define loop                for (;;)
+#endif
 #define BEGIN(a)            ((char*)&(a))
 #define END(a)              ((char*)&((&(a))[1]))
 #define UBEGIN(a)           ((unsigned char*)&(a))
@@ -145,7 +148,6 @@ extern bool fServer;
 extern bool fCommandLine;
 extern std::string strMiscWarning;
 extern bool fTestNet;
-extern bool fBloomFilters;
 extern bool fNoListen;
 extern bool fLogTimestamps;
 extern volatile bool fReopenDebugLog;
@@ -228,7 +230,6 @@ int64 GetTime();
 void SetMockTime(int64 nMockTimeIn);
 int64 GetAdjustedTime();
 int64 GetTimeOffset();
-long hex2long(const char* hexString);
 std::string FormatFullVersion();
 std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments);
 void AddTimeData(const CNetAddr& ip, int64 nTime);
@@ -309,8 +310,7 @@ std::string HexStr(const T itbegin, const T itend, bool fSpaces=false)
     return rv;
 }
 
-template<typename T>
-inline std::string HexStr(const T& vch, bool fSpaces=false)
+inline std::string HexStr(const std::vector<unsigned char>& vch, bool fSpaces=false)
 {
     return HexStr(vch.begin(), vch.end(), fSpaces);
 }

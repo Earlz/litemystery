@@ -1,6 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2013-2014 Dogecoin Developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -196,7 +195,7 @@ Value listunspent(const Array& params, bool fHelp)
         {
             CBitcoinAddress address(input.get_str());
             if (!address.IsValid())
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Dogecoin address: ")+input.get_str());
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid MysteryCoin address: ")+input.get_str());
             if (setAddress.count(address))
                 throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+input.get_str());
            setAddress.insert(address);
@@ -205,7 +204,6 @@ Value listunspent(const Array& params, bool fHelp)
 
     Array results;
     vector<COutput> vecOutputs;
-    assert(pwalletMain != NULL);
     pwalletMain->AvailableCoins(vecOutputs, false);
     BOOST_FOREACH(const COutput& out, vecOutputs)
     {
@@ -295,7 +293,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
     {
         CBitcoinAddress address(s.name_);
         if (!address.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Dogecoin address: ")+s.name_);
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid MysteryCoin address: ")+s.name_);
 
         if (setAddress.count(address))
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+s.name_);
@@ -409,7 +407,10 @@ Value signrawtransaction(const Array& params, bool fHelp)
             bool fGood = vchSecret.SetString(k.get_str());
             if (!fGood)
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
-            CKey key = vchSecret.GetKey();
+            CKey key;
+            bool fCompressed;
+            CSecret secret = vchSecret.GetSecret(fCompressed);
+            key.SetSecret(secret, fCompressed);
             tempKeystore.AddKey(key);
         }
     }
@@ -470,7 +471,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
         }
     }
 
-    const CKeyStore& keystore = ((fGivenKeys || !pwalletMain) ? tempKeystore : *pwalletMain);
+    const CKeyStore& keystore = (fGivenKeys ? tempKeystore : *pwalletMain);
 
     int nHashType = SIGHASH_ALL;
     if (params.size() > 3 && params[3].type() != null_type)

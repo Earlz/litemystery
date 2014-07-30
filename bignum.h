@@ -1,6 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2013-2014 Dogecoin Developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_BIGNUM_H
@@ -132,7 +131,7 @@ public:
 
         if (sn < (int64)0)
         {
-            // Since the minimum signed integer cannot be represented as positive so long as its type is signed, 
+            // Since the minimum signed integer cannot be represented as positive so long as its type is signed,
             // and it's not well-defined what happens if you make it unsigned before negating it,
             // we instead increment the negative integer by 1, convert it, then increment the (now positive) unsigned integer by 1 to compensate
             n = -(sn + 1);

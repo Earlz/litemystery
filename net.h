@@ -1,6 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2013-2014 Dogecoin Developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_NET_H
@@ -9,7 +8,6 @@
 #include <deque>
 #include <boost/array.hpp>
 #include <boost/foreach.hpp>
-#include <openssl/rand.h>
 
 #ifndef WIN32
 #include <arpa/inet.h>
@@ -22,6 +20,9 @@
 #include "addrman.h"
 #include "hash.h"
 #include "bloom.h"
+
+#include <openssl/rand.h>
+
 
 class CNode;
 class CBlockIndex;
@@ -52,7 +53,6 @@ enum
     LOCAL_IF,     // address a local interface listens on
     LOCAL_BIND,   // address explicit bound to
     LOCAL_UPNP,   // address reported by UPnP
-    LOCAL_IRC,    // address reported by IRC (deprecated)
     LOCAL_HTTP,   // address reported by whatismyip.com and similar
     LOCAL_MANUAL, // address explicitly specified (-externalip=)
 
@@ -106,7 +106,6 @@ public:
     int nMisbehavior;
     uint64 nSendBytes;
     uint64 nRecvBytes;
-    uint64 nBlocksRequested;
     bool fSyncNode;
 };
 
@@ -176,12 +175,11 @@ public:
     int64 nLastRecv;
     int64 nLastSendEmpty;
     int64 nTimeConnected;
-    uint64 nBlocksRequested;
     CAddress addr;
     std::string addrName;
     CService addrLocal;
     int nVersion;
-    // strSubVer is whatever byte array we read from the wire. However, this field is intended 
+    // strSubVer is whatever byte array we read from the wire. However, this field is intended
     // to be printed out, displayed to humans in various forms and so on. So we sanitize it and
     // store the sanitized version in cleanSubVer. The original should be used when dealing with
     // the network or wire types and the cleaned string used when displayed or logged.
@@ -228,18 +226,17 @@ public:
     CCriticalSection cs_inventory;
     std::multimap<int64, CInv> mapAskFor;
 
-    CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn = "", bool fInboundIn=false) : ssSend(SER_NETWORK, INIT_PROTO_VERSION)
+    CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn = "", bool fInboundIn=false) : ssSend(SER_NETWORK, MIN_PROTO_VERSION)
     {
         nServices = 0;
         hSocket = hSocketIn;
-        nRecvVersion = INIT_PROTO_VERSION;
+        nRecvVersion = MIN_PROTO_VERSION;
         nLastSend = 0;
         nLastRecv = 0;
         nSendBytes = 0;
         nRecvBytes = 0;
         nLastSendEmpty = GetTime();
         nTimeConnected = GetTime();
-        nBlocksRequested = 0;
         addr = addrIn;
         addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
         nVersion = 0;
@@ -296,7 +293,7 @@ public:
     unsigned int GetTotalRecvSize()
     {
         unsigned int total = 0;
-        BOOST_FOREACH(const CNetMessage &msg, vRecvMsg) 
+        BOOST_FOREACH(const CNetMessage &msg, vRecvMsg)
             total += msg.vRecv.size() + 24;
         return total;
     }
